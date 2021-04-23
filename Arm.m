@@ -3,18 +3,17 @@ classdef Arm < handle & matlab.mixin.SetGet
    
    properties (Constant, Hidden, Access=public)
       dt     = 0.001; % (seconds; time-step between successive samples)
-      E      = [];    % Elastic modulus [biceps, triceps]
-      eta    = [];    % coefficients of viscosity [biceps, triceps]
    end
    
    properties (GetAccess=public, SetAccess=private)
       r      = [ 0.315; 0.290 ]   % Radius of [upper, lower] segments (m)
+      r_max  = [ 0.314; 0.280 ]   % Maximum lengths of [biceps, triceps] (m)
+      r_min  = [ 0.308; 0.270 ]   % Minimum lengths of [biceps, triceps] (m)
       theta  = [ 30;    15    ]   % Angle (deg) from horizontal of upper, angle at elbow
       delta  = 0.020              % How much does the elbow stick out to serve as attachment for triceps? (m)
       lambda = [0.010, 0.050; 
                 0.025, 0.015]     % Connection offsets from base of segment (m) for viscoelastic muscle
-      sigma     = [0, 0];            % Stress on [biceps, triceps] (N)
-      d_epsilon = [0, 0];            % Change in strain on [biceps, triceps] (m)
+      q      = [15, 0]             % Past angular position, velocity.
    end
    
    properties (Hidden, Access=public)
@@ -107,6 +106,11 @@ classdef Arm < handle & matlab.mixin.SetGet
          self.draw();
       end
       
+      function fit(self, goal)
+         %FIT Move end-effector along "goal" trajectory.
+         
+      end
+      
       function draw(self)
          %DRAW Draw/update the graphics values.
          [x_u, y_u] = self.Upper();
@@ -180,8 +184,8 @@ classdef Arm < handle & matlab.mixin.SetGet
          h = axes(f, 'NextPlot', 'add', 'Color', 'k', ...
             'LineWidth', 1.5, 'XColor','w', 'YColor', 'w',...
             'FontName','Arial','FontSize',13,...
-            'XLim',[-0.1, 0.4], 'XTick',[0 0.2 0.4], ...
-            'YLim',[-0.25 0.25], 'YTick',[-0.1 0 0.1]);
+            'XLim',[-0.1, 0.5], 'XTick',[0 0.2 0.4], ...
+            'YLim',[-0.5 0.5], 'YTick',[-0.1 0 0.1]);
          xlabel(h,'AP (m)','FontName','Arial','Color','w','FontSize',14);
          ylabel(h,'ML (m)','FontName','Arial','Color','w','FontSize',14);
          title(h,'Ball-and-Stick 2-Segment Arm', ...
@@ -216,7 +220,7 @@ classdef Arm < handle & matlab.mixin.SetGet
             'Marker', 'o', ...
             'MarkerFaceColor', 'w', ...
             'MarkerEdgeColor', 'r', ...
-            'MarkerIndices', 2);
+            'MarkerIndices', [2, 3]);
          
          self.biceps = line(h, x_b, y_b,...
             'DisplayName','Biceps', ...
